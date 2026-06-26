@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2D5016" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>동의보감 AI 한의사</title>
+  <style>
+    :root {
+      --green-dark: #1a3a0a;
+      --green-main: #2D5016;
+      --green-mid: #4a7c2f;
+      --green-light: #7ab648;
+      --green-bg: #f0f7e8;
+      --gold: #c8960c;
+      --text-dark: #1a1a1a;
+      --text-mid: #444;
+      --text-light: #777;
+      --shadow: 0 4px 20px rgba(45,80,22,0.15);
+      --radius: 16px;
+      --max-w: 480px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+      background: #f5f0e8;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════
+       HOME SCREEN
+    ══════════════════════════════════════════ */
+    #homeScreen {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      transition: opacity 0.5s ease;
+      background: #f5efe0;
+      overflow: hidden;
+    }
+    #homeScreen.hidden { opacity: 0; pointer-events: none; }
+
+    /* 홈 이미지 - 화면 전체 배경 */
+    .home-bg {
+      position: absolute; inset: 0;
+      background-image: url('/home_image.png');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+    }
+
+    /* 하단 그라디언트 (버튼 영역) */
+    .home-bottom {
+      position: relative; z-index: 10;
+      width: 100%; padding: 0 32px 48px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(245,240,224,0.95) 40%, #f5efe0 100%);
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 60px;
+    }
+
+    /* 시작하기 버튼 - 이미지의 녹색 버튼 스타일 그대로 */
+    .start-btn {
+      width: 100%; max-width: 320px;
+      background: linear-gradient(135deg, #3a6b1a 0%, #2D5016 50%, #1e3d0e 100%);
+      border: none; border-radius: 14px;
+      padding: 20px 40px;
+      color: #fff; font-size: 22px; font-weight: 700;
+      font-family: inherit;
+      cursor: pointer; letter-spacing: 4px;
+      box-shadow: 0 6px 24px rgba(45,80,22,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .start-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+      border-radius: 14px;
+    }
+    .start-btn:active { transform: scale(0.97); box-shadow: 0 3px 12px rgba(45,80,22,0.4); }
+
+    /* ══════════════════════════════════════════
+       MAIN APP
+    ══════════════════════════════════════════ */
+    #mainApp { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-main) 60%, var(--green-mid) 100%);
+      color: white; padding: 18px 16px 14px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .header-inner {
+      max-width: var(--max-w); margin: 0 auto;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .header-icon { font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+    .header-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-text p  { font-size: 10px; opacity: 0.75; margin-top: 1px; }
+    .header-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+    .hdr-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.28);
+      color: #fff; font-size: 11px; padding: 5px 10px; border-radius: 20px;
+      cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,0.22); }
+
+    /* 채팅 영역 */
+    .chat-container {
+      flex: 1; overflow-y: auto; padding: 16px;
+      max-width: var(--max-w); margin: 0 auto; width: 100%;
+      padding-bottom: 130px;
+    }
+
+    /* 웰컴 카드 */
+    .welcome-card {
+      background: white; border-radius: var(--radius); padding: 20px;
+      margin-bottom: 16px; box-shadow: var(--shadow);
+      border: 1px solid rgba(122,182,72,0.2);
+    }
+    .welcome-card h2 { font-size: 15px; color: var(--green-main); margin-bottom: 8px; }
+    .welcome-card p  { font-size: 13px; color: var(--text-mid); line-height: 1.6; }
+    .quick-title { font-size: 12px; color: var(--text-light); margin: 14px 0 8px; font-weight: 600; }
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip {
+      background: var(--green-bg); border: 1.5px solid var(--green-light);
+      color: var(--green-main); font-size: 13px; padding: 6px 13px;
+      border-radius: 20px; cursor: pointer; transition: all 0.2s; font-weight: 500;
+    }
+    .chip:active { background: var(--green-light); color: white; }
+
+    /* 메시지 */
+    .message { margin-bottom: 16px; display: flex; flex-direction: column; }
+    .message.user      { align-items: flex-end; }
+    .message.assistant { align-items: flex-start; }
+    .msg-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+    .msg-bubble {
+      max-width: 90%; padding: 12px 15px; border-radius: var(--radius);
+      font-size: 14px; line-height: 1.7; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .message.user .msg-bubble {
+      background: linear-gradient(135deg, var(--green-main), var(--green-mid));
+      color: white; border-bottom-right-radius: 4px;
+    }
+    .message.assistant .msg-bubble {
+      background: white; color: var(--text-dark); border-bottom-left-radius: 4px;
+      border: 1px solid rgba(122,182,72,0.15);
+    }
+    .msg-bubble strong { color: var(--green-main); font-weight: 700; }
+    .section-block { margin: 8px 0; padding: 9px 11px; border-radius: 9px; background: var(--green-bg); border-left: 3px solid var(--green-light); }
+    .section-block.gold    { background: #fffbf0; border-left-color: var(--gold); }
+    .section-block.warning { background: #fff8f0; border-left-color: #e67e22; }
+
+    /* 로딩 */
+    .loading-msg {
+      display: flex; align-items: center; gap: 8px; color: var(--text-light);
+      font-size: 13px; padding: 12px 15px; background: white; border-radius: var(--radius);
+      max-width: 90%; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid rgba(122,182,72,0.15);
+    }
+    .dot-flashing { display: flex; gap: 4px; }
+    .dot-flashing span {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green-light);
+      animation: blink 1.2s infinite;
+    }
+    .dot-flashing span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-flashing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%,80%,100% { opacity: 0.2; transform: scale(0.8); }
+      40%          { opacity: 1;   transform: scale(1); }
+    }
+
+    /* 글자수 카운터 */
+    .char-counter {
+      text-align: right; font-size: 11px; color: var(--text-light);
+      padding: 2px 4px 0;
+    }
+    .char-counter.warn { color: #e67e22; font-weight: 600; }
+    .char-counter.over { color: #c0392b; font-weight: 700; }
+
+    /* 입력 영역 */
+    .input-area {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid rgba(0,0,0,0.08);
+      padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 50;
+    }
+    .input-inner { max-width: var(--max-w); margin: 0 auto; }
+    .input-row { display: flex; align-items: flex-end; gap: 10px; }
+    .input-box {
+      flex: 1; background: var(--green-bg); border: 1.5px solid rgba(122,182,72,0.4);
+      border-radius: 22px; padding: 10px 15px; font-size: 15px; font-family: inherit;
+      resize: none; outline: none; min-height: 44px; max-height: 110px;
+      line-height: 1.4; color: var(--text-dark); transition: border-color 0.2s;
+    }
+    .input-box:focus { border-color: var(--green-light); background: white; }
+    .input-box::placeholder { color: var(--text-light); }
+    .send-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-main), var(--green-mid));
+      border: none; color: white; font-size: 19px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(45,80,22,0.4); transition: transform 0.15s;
+    }
+    .send-btn:active   { transform: scale(0.92); }
+    .send-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    .disclaimer {
+      text-align: center; font-size: 10px; color: var(--text-light);
+      padding: 3px 0 0; max-width: var(--max-w); margin: 0 auto;
+    }
+
+    /* PDF 버튼 */
+    .pdf-fab {
+      position: fixed; bottom: 100px; right: 16px; z-index: 60;
+      width: 46px; height: 46px; border-radius: 50%;
+      background: linear-gradient(135deg, #c8960c, #e6b422);
+      border: none; color: white; font-size: 20px; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 3px 12px rgba(200,150,12,0.5);
+      transition: transform 0.15s;
+      title: 'PDF로 저장';
+    }
+    .pdf-fab.visible { display: flex; }
+    .pdf-fab:active  { transform: scale(0.92); }
+
+    /* 토스트 알림 */
+    .toast {
+      position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.78); color: #fff; font-size: 13px;
+      padding: 10px 20px; border-radius: 24px; z-index: 300;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    /* 포맷팅 */
+    .formatted-content p  { margin: 5px 0; }
+    .formatted-content ul { padding-left: 15px; margin: 5px 0; }
+    .formatted-content li { margin: 3px 0; }
+    .formatted-content h3 { font-size: 13px; color: var(--green-dark); margin: 10px 0 5px; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     HOME SCREEN - 홈 이미지 + 시작하기 버튼
+══════════════════════════════════════════════════ -->
+<div id="homeScreen">
+  <div class="home-bg"></div>
+  <div class="home-bottom">
+    <button class="start-btn" onclick="startApp()">시작하기</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════════ -->
+<div id="mainApp">
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-icon">🌿</div>
+      <div class="header-text">
+        <h1>동의보감 AI 한의사</h1>
+        <p>東醫寶鑑 · 조선 최고의 의학서로 건강을 지키세요</p>
+      </div>
+      <div class="header-actions">
+        <button class="hdr-btn" onclick="goHome()">🏠 홈</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="chat-container" id="chatContainer">
+    <div class="welcome-card" id="welcomeCard">
+      <h2>🌱 어떤 증상이 있으신가요?</h2>
+      <p>허준 선생의 동의보감(1613년)을 AI가 분석하여 전통 한의학 처방을 현대어로 풀어드립니다.</p>
+      <div class="quick-title">자주 찾는 증상</div>
+      <div class="quick-chips">
+        <button class="chip" onclick="quickSend('두통이 심하게 옵니다')">🤕 두통</button>
+        <button class="chip" onclick="quickSend('소화가 안 되고 속이 더부룩합니다')">🫃 소화불량</button>
+        <button class="chip" onclick="quickSend('감기 기운이 있고 목이 아픕니다')">🤧 감기</button>
+        <button class="chip" onclick="quickSend('잠을 잘 못 자고 불면증이 있습니다')">😴 불면증</button>
+        <button class="chip" onclick="quickSend('허리가 많이 아픕니다')">🦴 요통</button>
+        <button class="chip" onclick="quickSend('만성 피로가 심하고 기력이 없습니다')">😮‍💨 피로</button>
+        <button class="chip" onclick="quickSend('기침이 계속 납니다')">😮 기침</button>
+        <button class="chip" onclick="quickSend('손발이 차고 몸이 냉합니다')">🥶 냉증</button>
+      </div>
+    </div>
+    <div id="messages"></div>
+  </div>
+</div>
+
+<!-- PDF FAB 버튼 -->
+<button class="pdf-fab" id="pdfFab" onclick="downloadPDF()" title="PDF로 저장">📄</button>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+<!-- 입력 영역 -->
+<div class="input-area">
+  <div class="input-inner">
+    <div class="input-row">
+      <textarea class="input-box" id="userInput"
+        placeholder="증상을 자세히 입력해 주세요... (최대 300자)"
+        rows="1" maxlength="300"
+        onkeydown="handleKeydown(event)"
+        oninput="onInput(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
+    <div class="char-counter" id="charCounter">0 / 300</div>
+    <div class="disclaimer">⚕️ 교육 목적 정보이며, 전문 의료진의 진단을 대체하지 않습니다</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  앱 상태
+// ══════════════════════════════════════════════════════════
+const MAX_CHARS = 300;
+let conversationHistory = [];
+let isLoading = false;
+
+const homeScreen   = document.getElementById('homeScreen');
+const messagesEl   = document.getElementById('messages');
+const chatContainer= document.getElementById('chatContainer');
+const userInput    = document.getElementById('userInput');
+const sendBtn      = document.getElementById('sendBtn');
+const pdfFab       = document.getElementById('pdfFab');
+const charCounter  = document.getElementById('charCounter');
+
+// ── 홈 화면 ───────────────────────────────────────────────
+function startApp() {
+  homeScreen.classList.add('hidden');
+  setTimeout(() => { homeScreen.style.display = 'none'; }, 500);
+  userInput.focus();
+}
+
+function goHome() {
+  homeScreen.style.display = 'flex';
+  requestAnimationFrame(() => homeScreen.classList.remove('hidden'));
+}
+
+// ── 입력 처리 ─────────────────────────────────────────────
+function onInput(el) {
+  // 자동 리사이즈
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+
+  // 글자수 카운터
+  const len = el.value.length;
+  charCounter.textContent = `${len} / ${MAX_CHARS}`;
+  charCounter.className = 'char-counter' +
+    (len > 270 ? ' over' : len > 240 ? ' warn' : '');
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 600) {
+    e.preventDefault(); sendMessage();
+  }
+}
+
+function quickSend(text) {
+  userInput.value = text;
+  onInput(userInput);
+  sendMessage();
+}
+
+// ── 메시지 렌더링 ─────────────────────────────────────────
+function formatResponse(text) {
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+    .replace(/^#{1,3} (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^[\-\*] (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>')
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  html = html
+    .replace(/(📋[^📜🌿⚠️]*)/gs,'<div class="section-block">$1</div>')
+    .replace(/(📜[^🌿⚠️]*)/gs,'<div class="section-block gold">$1</div>')
+    .replace(/(🌿[^⚠️]*)/gs,'<div class="section-block">$1</div>')
+    .replace(/(⚠️.*)/gs,'<div class="section-block warning">$1</div>');
+  return `<div class="formatted-content"><p>${html}</p></div>`;
+}
+
+function addMessage(role, content, loading = false) {
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  if (loading) {
+    div.id = 'loadingMsg';
+    div.innerHTML = `
+      <div class="msg-label">🌿 동의보감 AI</div>
+      <div class="loading-msg">
+        <span>동의보감을 분석 중입니다</span>
+        <div class="dot-flashing"><span></span><span></span><span></span></div>
+      </div>`;
+  } else {
+    const label  = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = role === 'assistant' ? '🌿 동의보감 AI' : '나';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.innerHTML  = role === 'assistant' ? formatResponse(content) : content;
+    div.appendChild(label);
+    div.appendChild(bubble);
+  }
+  messagesEl.appendChild(div);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return div;
+}
+
+// ── 토스트 ────────────────────────────────────────────────
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── 메시지 전송 ───────────────────────────────────────────
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text || isLoading) return;
+
+  // 클라이언트 측 300자 검증
+  if (text.length > MAX_CHARS) {
+    showToast(`❌ 최대 ${MAX_CHARS}자까지 입력 가능합니다.`);
+    return;
+  }
+
+  document.getElementById('welcomeCard').style.display = 'none';
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  userInput.value = '';
+  userInput.style.height = 'auto';
+  onInput(userInput);
+  sendBtn.disabled = true;
+  isLoading = true;
+  addMessage('assistant', '', true);
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: conversationHistory,
+        userMessage: text
+      })
+    });
+
+    document.getElementById('loadingMsg')?.remove();
+    const data = await res.json();
+
+    if (!res.ok) {
+      addMessage('assistant', `❌ ${data.error || '오류가 발생했습니다.'}`);
+    } else {
+      addMessage('assistant', data.message);
+      conversationHistory.push({ role: 'assistant', content: data.message });
+      // PDF 버튼 표시
+      if (conversationHistory.length >= 2) pdfFab.classList.add('visible');
+    }
+
+  } catch (err) {
+    document.getElementById('loadingMsg')?.remove();
+    addMessage('assistant', '❌ 네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+  }
+
+  sendBtn.disabled = false;
+  isLoading = false;
+  userInput.focus();
+}
+
+// ── PDF 다운로드 ──────────────────────────────────────────
+async function downloadPDF() {
+  if (conversationHistory.length === 0) {
+    showToast('저장할 상담 내용이 없습니다.');
+    return;
+  }
+
+  showToast('📄 PDF를 생성하고 있습니다...', 4000);
+  pdfFab.disabled = true;
+
+  try {
+    const res = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversations: conversationHistory,
+        title: '동의보감 AI 한의사 상담 기록'
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      showToast(`❌ ${err.error || 'PDF 생성 실패'}`);
+      return;
+    }
+
+    // Blob으로 다운로드
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const now  = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    a.href     = url;
+    a.download = `동의보감_상담기록_${dateStr}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('✅ PDF가 저장되었습니다!');
+
+  } catch (err) {
+    showToast('❌ PDF 생성 중 오류가 발생했습니다.');
+  } finally {
+    pdfFab.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
