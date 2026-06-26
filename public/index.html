@@ -305,7 +305,7 @@
   <div class="input-inner">
     <div class="input-row">
       <textarea class="input-box" id="userInput"
-        placeholder="증상을 자세히 입력해 주세요... (최대 300자)"
+        placeholder="증상을 자세히 입력해 주세요."
         rows="1" maxlength="300"
         onkeydown="handleKeydown(event)"
         oninput="onInput(this)"></textarea>
@@ -336,7 +336,7 @@ const charCounter  = document.getElementById('charCounter');
 function startApp() {
   homeScreen.classList.add('hidden');
   setTimeout(() => { homeScreen.style.display = 'none'; }, 500);
-  userInput.focus();
+  // 모바일에서 키보드가 자동으로 올라와 화면이 밀리는 현상 방지 — focus() 제거
 }
 
 function goHome() {
