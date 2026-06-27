@@ -15,16 +15,16 @@ jobs:
 
     steps:
       - name: 소스 체크아웃
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cloudtype 저장소 연결
-        uses: cloudtype-github-actions/connect@v1
+        uses: cloudtype-github-actions/connect@v2
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           ghtoken: ${{ secrets.GHP_TOKEN }}
 
       - name: Cloudtype 배포
-        uses: cloudtype-github-actions/deploy@v1
+        uses: cloudtype-github-actions/deploy@v2
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           project: ${{ secrets.CLOUDTYPE_PROJECT }}
