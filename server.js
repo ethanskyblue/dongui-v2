@@ -83,63 +83,161 @@ function loadDonguibogamTexts() {
   console.log(`✅ 총 ${donguibogamTexts.length}권 로드 완료`);
 }
 
-// 증상 키워드 → 한자 매핑
-function searchDonguibogam(symptoms) {
-  const keywordMap = {
-    '두통': ['頭痛', '頭疼', '腦痛', '頭風'],
-    'headache': ['頭痛', '頭疼', '頭風'],
-    '복통': ['腹痛', '肚痛', '腹疼', '胃痛'],
-    '기침': ['咳嗽', '咳逆', '嗽', '肺咳'],
-    'cough': ['咳嗽', '咳逆', '肺咳'],
-    '소화': ['消化', '脾胃', '食積', '不食', '脾虛'],
-    '감기': ['傷風', '傷寒', '感冒', '風寒'],
-    'cold': ['傷風', '傷寒', '感冒', '風寒'],
-    '발열': ['發熱', '熱症', '壯熱', '潮熱'],
-    'fever': ['發熱', '熱症', '壯熱'],
-    '설사': ['泄瀉', '下利', '腹瀉'],
-    '변비': ['便秘', '大便難', '大便秘'],
-    '불면': ['不眠', '失眠', '不得眠', '不寐'],
-    'insomnia': ['不眠', '失眠', '不寐'],
-    '어지러움': ['眩暈', '頭暈', '眩冒'],
-    '요통': ['腰痛', '腰疼', '腎虛'],
-    'back': ['腰痛', '腰疼'],
-    '피로': ['虛勞', '氣虛', '精力'],
-    'fatigue': ['虛勞', '氣虛'],
-    '관절': ['關節', '痺症', '痛痺'],
-    '피부': ['皮膚', '瘡', '疥'],
-    '월경': ['月經', '月事', '婦人'],
-    '심장': ['心臟', '心痛', '心悸'],
-    '간': ['肝臟', '肝氣', '肝病'],
-    '신장': ['腎臟', '腎虛', '腰腎'],
-  };
+// 증상 키워드 → 한자 매핑 (한국어·영어 지원, 증상별 풍부한 원문 검색)
+const KEYWORD_MAP = {
+  // 두통·머리
+  '두통': ['頭痛', '頭疼', '腦痛', '頭風', '偏頭痛'],
+  '머리': ['頭痛', '頭風', '腦'],
+  '편두통': ['偏頭痛', '頭風'],
+  'headache': ['頭痛', '頭疼', '頭風'],
+  // 소화·위장
+  '소화': ['消化', '脾胃', '食積', '不食', '脾虛'],
+  '위': ['胃痛', '脾胃', '胃'],
+  '복통': ['腹痛', '肚痛', '腹疼', '胃痛'],
+  '배': ['腹痛', '腹疼', '脾胃'],
+  '체함': ['食積', '脾虛', '消食'],
+  '더부룩': ['食積', '脾胃', '痞'],
+  '구토': ['嘔吐', '惡心', '嘔逆'],
+  '메스꺼움': ['惡心', '嘔吐', '嘔逆'],
+  'stomach': ['胃痛', '脾胃', '腹痛'],
+  // 호흡기
+  '기침': ['咳嗽', '咳逆', '嗽', '肺咳', '咳'],
+  '가래': ['痰', '痰嗽', '痰飮'],
+  '천식': ['哮喘', '氣喘', '喘息'],
+  '감기': ['傷風', '傷寒', '感冒', '風寒', '外感'],
+  '콧물': ['鼻涕', '鼻淵', '傷風'],
+  '코막힘': ['鼻塞', '鼻淵'],
+  '목아픔': ['咽喉', '喉痛', '咽痛'],
+  'cough': ['咳嗽', '咳逆', '肺咳'],
+  'cold': ['傷風', '傷寒', '感冒', '風寒'],
+  // 발열·한열
+  '발열': ['發熱', '熱症', '壯熱', '潮熱'],
+  '열': ['發熱', '熱症', '壯熱'],
+  '오한': ['惡寒', '惡風', '寒熱'],
+  '냉증': ['寒冷', '冷症', '惡寒'],
+  '손발냉': ['手足冷', '四肢冷'],
+  'fever': ['發熱', '熱症', '壯熱'],
+  // 배변
+  '설사': ['泄瀉', '下利', '腹瀉', '洞泄'],
+  '변비': ['便秘', '大便難', '大便秘', '燥結'],
+  '혈변': ['便血', '下血'],
+  'diarrhea': ['泄瀉', '下利'],
+  'constipation': ['便秘', '大便難'],
+  // 수면
+  '불면': ['不眠', '失眠', '不得眠', '不寐'],
+  '잠': ['不眠', '失眠', '不寐'],
+  '수면': ['不眠', '失眠'],
+  'insomnia': ['不眠', '失眠', '不寐'],
+  // 어지러움
+  '어지러움': ['眩暈', '頭暈', '眩冒', '頭眩'],
+  '어지럼': ['眩暈', '頭暈', '眩冒'],
+  '현기증': ['眩暈', '頭暈'],
+  'dizziness': ['眩暈', '頭暈'],
+  // 근골격
+  '요통': ['腰痛', '腰疼', '腎虛', '腰脊'],
+  '허리': ['腰痛', '腰疼', '腰脊'],
+  '관절': ['關節', '痺症', '痛痺', '骨痛'],
+  '무릎': ['膝痛', '膝關節', '痺症'],
+  '어깨': ['肩痛', '肩背'],
+  '근육': ['筋肉', '筋痛', '拘攣'],
+  'back pain': ['腰痛', '腰疼'],
+  'joint': ['關節', '痺症'],
+  // 피로·기력
+  '피로': ['虛勞', '氣虛', '精力', '疲勞', '倦怠'],
+  '기력': ['氣虛', '虛勞', '元氣'],
+  '무기력': ['氣虛', '虛勞', '倦怠'],
+  '허약': ['虛弱', '氣虛', '虛勞'],
+  'fatigue': ['虛勞', '氣虛'],
+  'weakness': ['虛弱', '氣虛'],
+  // 피부
+  '피부': ['皮膚', '瘡', '疥', '癬'],
+  '가려움': ['瘙癢', '痒', '風癢'],
+  '두드러기': ['風疹', '癮疹'],
+  '여드름': ['面瘡', '面疱'],
+  'skin': ['皮膚', '瘡', '癬'],
+  // 순환기·심장
+  '심장': ['心臟', '心痛', '心悸'],
+  '가슴': ['胸痛', '胸悶', '心痛'],
+  '두근거림': ['心悸', '怔忡', '驚悸'],
+  '혈압': ['血壓', '肝陽'],
+  'heart': ['心臟', '心痛', '心悸'],
+  // 간·신장
+  '간': ['肝臟', '肝氣', '肝病'],
+  '신장': ['腎臟', '腎虛', '腰腎'],
+  // 부인과
+  '월경': ['月經', '月事', '婦人', '經'],
+  '생리': ['月經', '月事', '月水'],
+  '냉대하': ['帶下', '白帶'],
+  'menstruation': ['月經', '月事'],
+  // 정신·신경
+  '스트레스': ['鬱', '氣鬱', '肝鬱'],
+  '우울': ['憂鬱', '鬱症', '氣鬱'],
+  '불안': ['驚悸', '恐悸'],
+  '건망증': ['健忘'],
+  'stress': ['鬱', '氣鬱'],
+  // 당뇨·대사
+  '당뇨': ['消渴', '糖尿'],
+  '갈증': ['消渴', '口渴', '渴'],
+  // 눈·귀·코
+  '눈': ['目', '眼', '目痛'],
+  '귀': ['耳', '耳鳴', '耳聾'],
+  '이명': ['耳鳴', '耳'],
+  '코': ['鼻', '鼻淵', '鼻塞'],
+};
 
+function searchDonguibogam(symptoms) {
   const lowerSymptoms = symptoms.toLowerCase();
-  let searchTerms = [];
-  for (const [keyword, chinese] of Object.entries(keywordMap)) {
-    if (lowerSymptoms.includes(keyword)) {
-      searchTerms.push(...chinese);
+  let searchTerms = new Set();
+
+  // 키워드 매핑으로 한자 검색어 수집
+  for (const [keyword, chineseTerms] of Object.entries(KEYWORD_MAP)) {
+    if (lowerSymptoms.includes(keyword.toLowerCase())) {
+      chineseTerms.forEach(t => searchTerms.add(t));
     }
   }
 
+  // 매핑 실패 시: 사용자 입력에서 직접 한자 추출
+  if (searchTerms.size === 0) {
+    const chineseChars = symptoms.match(/[一-鿿]+/g);
+    if (chineseChars) chineseChars.forEach(c => searchTerms.add(c));
+  }
+
+  // 여전히 없으면 일반 처방 키워드로 검색
+  const generalTerms = searchTerms.size === 0
+    ? ['治', '方', '藥', '湯', '丸', '散']
+    : [...searchTerms];
+
   let relevantPassages = [];
-  if (searchTerms.length === 0) return relevantPassages;
 
   for (const vol of donguibogamTexts) {
     const lines = vol.text.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line) continue;
-      const hasMatch = searchTerms.some(term => line.includes(term));
-      if (hasMatch) {
-        const start = Math.max(0, i - 2);
-        const end = Math.min(lines.length - 1, i + 8);
-        const passage = lines.slice(start, end + 1).join('\n');
-        relevantPassages.push({ volume: vol.volume, passage: passage.trim() });
+      if (!line || line.length < 3) continue;
+
+      const matchCount = generalTerms.filter(t => line.includes(t)).length;
+      if (matchCount > 0) {
+        const start = Math.max(0, i - 1);
+        const end = Math.min(lines.length - 1, i + 12);
+        const passage = lines.slice(start, end + 1)
+          .filter(l => l.trim().length > 0)
+          .join('\n');
+        if (passage.length > 10) {
+          relevantPassages.push({
+            volume: vol.volume,
+            passage: passage.trim(),
+            score: matchCount
+          });
+        }
         i = end;
       }
     }
   }
-  return relevantPassages.slice(0, 15);
+
+  // 관련도 높은 순 정렬 후 상위 10개 반환
+  return relevantPassages
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
 }
 
 // =============================================================
