@@ -1,7 +1,7 @@
 name: 매일 자동 재배포 (Cloudtype)
 
 on:
-  # 매일 오전 5시 (KST) = UTC 20:00 (전날)
+  # 매일 오전 5시 20분 (KST) = UTC 20:20 (전날)
   schedule:
     - cron: '20 20 * * *'
 
@@ -35,13 +35,6 @@ jobs:
               install: npm install
               start: node server.js
               port: "3000"
-            env:
-              - name: ANTHROPIC_API_KEY
-                value: ${{ secrets.ANTHROPIC_API_KEY }}
-              - name: ALLOWED_ORIGINS
-                value: ${{ secrets.ALLOWED_ORIGINS }}
-              - name: PORT
-                value: "3000"
             context:
               git:
                 ref: ${{ github.ref }}
