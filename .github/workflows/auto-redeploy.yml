@@ -10,32 +10,21 @@ on:
 
 jobs:
   deploy:
-    name: Cloudtype 재배포
     runs-on: ubuntu-latest
-
     steps:
-      - name: 소스 체크아웃
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cloudtype 저장소 연결
+      - name: Connect deploy key
         uses: cloudtype-github-actions/connect@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           ghtoken: ${{ secrets.GHP_TOKEN }}
 
-      - name: Cloudtype 배포
+      - name: Deploy
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: ${{ secrets.CLOUDTYPE_PROJECT }}
-          yaml: |-
-            name: ${{ secrets.CLOUDTYPE_SERVICE }}
-            app: node@24
-            options:
-              install: npm install
-              start: node server.js
-              port: "3000"
-            context:
-              git:
-                ref: ${{ github.ref }}
-                url: git@github.com:${{ github.repository }}.git
+          project: woondeog.jang/woon-ai
+          stage: main
+          file: .cloudtype/app.yaml

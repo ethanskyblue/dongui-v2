@@ -1,0 +1,17 @@
+name: dongui-v2
+app: node@24
+options:
+  install: npm install
+  start: node server.js
+  port: "3000"
+env:
+  - name: ANTHROPIC_API_KEY
+    valueFrom:
+      projectSecret: ANTHROPIC_API_KEY
+  - name: ALLOWED_ORIGINS
+    valueFrom:
+      projectSecret: ALLOWED_ORIGINS
+context:
+  git:
+    url: git@github.com:ethanskyblue/dongui-v2.git
+    ref: refs/heads/main
