@@ -27,4 +27,36 @@ jobs:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
           project: woondeog.jang/woon-ai
           stage: main
-          file: .cloudtype/app.yaml
+          yaml: >
+            name: dongui-v2
+
+            app: node@24
+
+            options:
+              install: npm install
+              start: node server.js
+              port: "3000"
+              ports: "3000"
+              build: ""
+              env:
+                - name: GMAIL_USER
+                  secret: GMAIL_USER
+                - name: GMAIL_CLIENT_ID
+                  secret: GMAIL_CLIENT_ID
+                - name: GMAIL_CLIENT_SECRET
+                  secret: GMAIL_CLIENT_SECRET
+                - name: GMAIL_REFRESH_TOKEN
+                  secret: GMAIL_REFRESH_TOKEN
+                - name: ANTHROPIC_API_KEY
+                  secret: ANTHROPIC_API_KEY
+                - name: MAIL_TO
+                  value: woondeog.jang@gmail.com, wdjang@empas.com
+                - name: MAIL_FROM_NAME
+                  value: 동의보감 AI 한의사
+                - name: ALLOWED_ORIGINS
+                  value: https://port-0-dongui-v2-mqlm15dlb837dc12.sel3.cloudtype.app
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
