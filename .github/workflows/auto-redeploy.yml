@@ -3,7 +3,7 @@ name: 매일 자동 재배포 (Cloudtype)
 on:
   # 매일 오전 5시 20분 (KST) = UTC 20:20 (전날)
   schedule:
-    - cron: '20 20 * * *'
+    - cron: '1 19 * * *'
 
   # 수동 실행 (GitHub Actions 탭 → Run workflow)
   workflow_dispatch:
